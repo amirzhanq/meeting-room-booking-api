@@ -3,14 +3,15 @@
 ## Setup
 1. `composer install`
 2. `cp .env.example .env`
-3. `touch database/database.sqlite`
-4. `php artisan migrate --seed`
-5. `php artisan serve`
+3. `php artisan key:generate`
+4. `touch database/database.sqlite`
+5. `php artisan migrate --seed`
+6. `php artisan serve`
 
 ## API Endpoints
 
 ### 1. List Rooms
-`GET /api/rooms`
+`GET /api/rooms` — Returns all available meeting rooms with their IDs.
 
 ### 2. Create Booking
 `POST /api/bookings`
@@ -28,9 +29,13 @@ Payload:
 `GET /api/bookings?uid=john_doe`
 `GET /api/bookings?room_id=1`
 
-## Correctness Features
-- **Overlap Protection:** The system prevents booking a room that is already occupied during the requested time slot.
-- **Validation:** Ensures `end_time` is after `start_time` and `start_time` is in the future.
-- **Database Indexes:** Optimized for filtering by `uid` and checking room availability.
-- **Resources:** Structured JSON responses using Laravel API Resources.
-- **Tests:** Includes Feature tests for core business logic.
+## Engineering Standards & Features
+- **Race Condition Prevention:** Uses database transactions and `lockForUpdate()` to ensure atomicity and prevent double-booking during concurrent requests.
+- **Overlap Protection:** Robust logic to prevent any time-slot overlaps for the same room.
+- **Automated Testing:** Comprehensive Feature tests covering edge cases, boundary conditions, and validation.
+- **CI/CD:** GitHub Actions workflow configured to run tests automatically on push.
+- **Code Quality:** 
+    - **Laravel Pint:** Code style strictly follows Laravel standards.
+    - **Form Requests:** Validation logic encapsulated in dedicated Request classes for clean controllers.
+    - **API Resources:** Standardized JSON responses using Laravel Resources.
+- **Performance:** Optimized database indexes for frequent filtering and availability checks.
