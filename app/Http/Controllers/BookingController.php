@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -32,24 +33,27 @@ class BookingController extends Controller
             'end_time' => 'required|date|after:start_time',
         ]);
 
-        $overlap = Booking::where('room_id', $validated['room_id'])
-            ->where(function ($query) use ($validated) {
-                $query->where('start_time', '<', $validated['end_time'])
-                      ->where('end_time', '>', $validated['start_time']);
-            })
-            ->exists();
+        return DB::transaction(function () use ($validated) {
+            $overlap = Booking::where('room_id', $validated['room_id'])
+                ->lockForUpdate()
+                ->where(function ($query) use ($validated) {
+                    $query->where('start_time', '<', $validated['end_time'])
+                          ->where('end_time', '>', $validated['start_time']);
+                })
+                ->exists();
 
-        if ($overlap) {
-            return response()->json([
-                'message' => 'The room is already booked for the selected time slot.',
-                'errors' => [
-                    'start_time' => ['Overlap detected.']
-                ]
-            ], 422);
-        }
+            if ($overlap) {
+                return response()->json([
+                    'message' => 'The room is already booked for the selected time slot.',
+                    'errors' => [
+                        'start_time' => ['Overlap detected.']
+                    ]
+                ], 422);
+            }
 
-        $booking = Booking::create($validated);
+            $booking = Booking::create($validated);
 
-        return new BookingResource($booking->load('room'));
+            return new BookingResource($booking->load('room'));
+        });
     }
 }
