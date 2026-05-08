@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use Illuminate\Http\Request;
@@ -24,14 +25,9 @@ class BookingController extends Controller
         return BookingResource::collection($query->with('room')->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreBookingRequest $request)
     {
-        $validated = $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'uid' => 'required|string',
-            'start_time' => 'required|date|after:now',
-            'end_time' => 'required|date|after:start_time',
-        ]);
+        $validated = $request->validated();
 
         return DB::transaction(function () use ($validated) {
             $overlap = Booking::where('room_id', $validated['room_id'])
