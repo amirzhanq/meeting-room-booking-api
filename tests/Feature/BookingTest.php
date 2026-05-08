@@ -78,4 +78,86 @@ class BookingTest extends TestCase
             ->assertStatus(200)
             ->assertJsonCount(1);
     }
+
+    public function test_validation_errors_for_invalid_times()
+    {
+        $room = Room::create(['name' => 'Room 1']);
+
+        // End before start
+        $this->postJson('/api/bookings', [
+            'room_id' => $room->id,
+            'uid' => 'user1',
+            'start_time' => now()->addHours(2)->toDateTimeString(),
+            'end_time' => now()->addHour()->toDateTimeString(),
+        ])->assertStatus(422)->assertJsonValidationErrors(['end_time']);
+
+        // Start in the past
+        $this->postJson('/api/bookings', [
+            'room_id' => $room->id,
+            'uid' => 'user1',
+            'start_time' => now()->subDay()->toDateTimeString(),
+            'end_time' => now()->addHour()->toDateTimeString(),
+        ])->assertStatus(422)->assertJsonValidationErrors(['start_time']);
+    }
+
+    public function test_boundary_times_do_not_overlap()
+    {
+        $room = Room::create(['name' => 'Room 1']);
+
+        $mid = now()->addHours(5)->roundMinute();
+
+        // Booking 1: 10:00 - 11:00
+        Booking::create([
+            'room_id' => $room->id,
+            'uid' => 'user1',
+            'start_time' => $mid->copy()->subHour(),
+            'end_time' => $mid,
+        ]);
+
+        // Booking 2: 11:00 - 12:00 (Exactly at the boundary)
+        $response = $this->postJson('/api/bookings', [
+            'room_id' => $room->id,
+            'uid' => 'user2',
+            'start_time' => $mid->toDateTimeString(),
+            'end_time' => $mid->copy()->addHour()->toDateTimeString(),
+        ]);
+
+        $response->assertStatus(201);
+    }
+
+    public function test_fully_contained_overlap()
+    {
+        $room = Room::create(['name' => 'Room 1']);
+
+        $start = now()->addHours(10)->roundMinute();
+        $end = $start->copy()->addHours(5);
+
+        // Big booking: 10:00 - 15:00
+        Booking::create([
+            'room_id' => $room->id,
+            'uid' => 'user1',
+            'start_time' => $start,
+            'end_time' => $end,
+        ]);
+
+        // Small booking inside: 11:00 - 12:00
+        $response = $this->postJson('/api/bookings', [
+            'room_id' => $room->id,
+            'uid' => 'user2',
+            'start_time' => $start->copy()->addHour()->toDateTimeString(),
+            'end_time' => $start->copy()->addHours(2)->toDateTimeString(),
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_list_rooms()
+    {
+        Room::create(['name' => 'Green']);
+        Room::create(['name' => 'Blue']);
+
+        $this->getJson('/api/rooms')
+            ->assertStatus(200)
+            ->assertJsonCount(2);
+    }
 }
