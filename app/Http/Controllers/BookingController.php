@@ -38,7 +38,7 @@ class BookingController extends Controller
                 ->lockForUpdate()
                 ->where(function ($query) use ($validated) {
                     $query->where('start_time', '<', $validated['end_time'])
-                          ->where('end_time', '>', $validated['start_time']);
+                        ->where('end_time', '>', $validated['start_time']);
                 })
                 ->exists();
 
@@ -46,8 +46,8 @@ class BookingController extends Controller
                 return response()->json([
                     'message' => 'The room is already booked for the selected time slot.',
                     'errors' => [
-                        'start_time' => ['Overlap detected.']
-                    ]
+                        'start_time' => ['Overlap detected.'],
+                    ],
                 ], 422);
             }
 

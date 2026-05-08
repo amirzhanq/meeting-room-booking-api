@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Room;
 use Illuminate\Database\Seeder;
 
 class RoomSeeder extends Seeder
@@ -12,8 +12,8 @@ class RoomSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Room::create(['name' => 'Green Room']);
-        \App\Models\Room::create(['name' => 'Blue Room']);
-        \App\Models\Room::create(['name' => 'Large Conference Hall']);
+        Room::create(['name' => 'Green Room']);
+        Room::create(['name' => 'Blue Room']);
+        Room::create(['name' => 'Large Conference Hall']);
     }
 }

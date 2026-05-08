@@ -49,6 +49,7 @@ class BookingTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['start_time']);
     }
+
     public function test_can_filter_bookings()
     {
         $room1 = Room::create(['name' => 'Room 1']);
