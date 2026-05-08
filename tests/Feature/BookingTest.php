@@ -152,13 +152,22 @@ class BookingTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_list_rooms()
+    public function test_list_rooms_includes_bookings()
     {
-        Room::create(['name' => 'Green']);
-        Room::create(['name' => 'Blue']);
+        $room = Room::create(['name' => 'Green']);
 
-        $this->getJson('/api/rooms')
-            ->assertStatus(200)
-            ->assertJsonCount(2);
+        Booking::create([
+            'room_id' => $room->id,
+            'uid' => 'user1',
+            'start_time' => now()->addHour(),
+            'end_time' => now()->addHours(2),
+        ]);
+
+        $response = $this->getJson('/api/rooms');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Green')
+            ->assertJsonCount(1, 'data.0.bookings');
     }
 }
