@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,7 @@ class BookingController extends Controller
             $query->where('room_id', $request->room_id);
         }
 
-        return response()->json($query->with('room')->get());
+        return BookingResource::collection($query->with('room')->get());
     }
 
     public function store(Request $request)
@@ -49,6 +50,6 @@ class BookingController extends Controller
 
         $booking = Booking::create($validated);
 
-        return response()->json($booking, 201);
+        return new BookingResource($booking->load('room'));
     }
 }

@@ -21,7 +21,7 @@ class BookingTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('uid', 'user1');
+            ->assertJsonPath('data.uid', 'user1');
     }
 
     public function test_cannot_overlap_bookings()
